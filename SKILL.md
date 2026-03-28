@@ -6,6 +6,50 @@ metadata:
     emoji: "📖"
 ---
 
-# Bible BSB — helloao.org API Integration
+# Bible Verse Lookup
 
-*Core instructions to be added in issue #2.*
+Use this skill when the user asks for a Bible verse, passage, chapter, or Scripture reference.
+
+## How to use
+
+Run the lookup script:
+
+```bash
+python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare]
+```
+
+### Arguments
+
+- **reference** (required): A human-readable Bible reference.
+  Examples: `"John 3:16"`, `"Romans 8:28-30"`, `"Psalm 23"`, `"1 Corinthians 13:4-8"`
+- **--translation ID**: Translation code (default: `BSB`). Common options: `KJV`, `ENGWEBP`.
+- **--study**: Include footnotes from the translation alongside verse text.
+- **--compare**: Show the passage in BSB, KJV, and ENGWEBP side by side.
+
+### Reference format
+
+- Full names or common abbreviations: `Genesis 1:1`, `Gen 1:1`
+- Numbered books: `1 Corinthians 13:4-8`, `2 Tim 1:7`
+- Full chapter (no verse): `Psalm 23`
+- Case-insensitive
+
+### Output
+
+The script prints:
+1. A citation header (e.g., `John 3:16 (BSB)`)
+2. Verse numbers and text, with section headings in brackets
+3. If `--study`: footnotes listed at the end with reference and note text
+4. If `--compare`: the same block repeated for each translation
+
+### Error handling
+
+The script exits with a non-zero code and prints to stderr on:
+- Unknown book name
+- Unparseable reference format
+- API fetch failure (network or HTTP error)
+
+### Notes
+
+- No external dependencies — uses Python stdlib only.
+- API: `https://bible.helloao.org/api` (no auth required).
+- Be respectful of the API — do not blast parallel requests.
