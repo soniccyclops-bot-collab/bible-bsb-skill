@@ -11,41 +11,28 @@ import urllib.error
 BASE_URL = "https://bible.helloao.org/api"
 
 # Commentary short names → API commentary IDs
-# Short aliases for convenience — dynamic lookup handles everything else
-COMMENTARY_ALIASES = {
-    "gill": "john-gill",
-    "henry": "matthew-henry",
-    "clarke": "adam-clarke",
-    "jfb": "jamieson-fausset-brown",
-    "kd": "keil-delitzsch",
-}
-
-
 def resolve_commentary(name):
-    """Resolve a commentary name to an API ID.
+    """Resolve a commentary name to an API ID via dynamic lookup.
     
-    Checks aliases first, then queries available_commentaries.json
-    for an exact or partial match on id/name/englishName.
+    Queries available_commentaries.json and matches by exact ID,
+    or partial match on id/name/englishName.
     """
     key = name.lower().strip()
-    # Check aliases first
-    if key in COMMENTARY_ALIASES:
-        return COMMENTARY_ALIASES[key]
-    # Try as a direct API ID
     try:
         url = f"{BASE_URL}/available_commentaries.json"
         with urllib.request.urlopen(url) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+        # Exact match on ID first
         for c in data.get("commentaries", []):
-            cid = c.get("id", "")
-            # Exact match on ID
-            if key == cid.lower():
-                return cid
-            # Partial match on name or englishName
+            if key == c.get("id", "").lower():
+                return c["id"]
+        # Partial match on id/name/englishName
+        for c in data.get("commentaries", []):
+            cid = c.get("id", "").lower()
             cname = c.get("name", "").lower()
             ename = c.get("englishName", "").lower()
-            if key in cid.lower() or key in cname or key in ename:
-                return cid
+            if key in cid or key in cname or key in ename:
+                return c["id"]
     except Exception:
         pass
     # Fall back to using the name as-is (let the API error if invalid)
