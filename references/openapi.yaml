@@ -1,0 +1,454 @@
+openapi: 3.1.0
+info:
+  title: helloao.org Bible API
+  version: 1.11.0
+  description: >
+    Public, read-only JSON API serving Bible translations, books, and chapter
+    content from helloao.org. No authentication required.
+  license:
+    name: Various (per translation)
+    url: https://helloao.org
+  x-api-source: https://bible.helloao.org
+  x-api-changelog: https://github.com/HelloAOLab/bible-api/blob/main/API-CHANGELOG.md
+
+servers:
+  - url: https://bible.helloao.org
+    description: Production
+
+paths:
+  /api/available_translations.json:
+    get:
+      operationId: listTranslations
+      summary: List all available translations
+      responses:
+        '200':
+          description: List of translations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [translations]
+                properties:
+                  translations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Translation'
+
+  /api/{translationId}/books.json:
+    get:
+      operationId: listBooks
+      summary: List books for a translation
+      parameters:
+        - $ref: '#/components/parameters/translationId'
+      responses:
+        '200':
+          description: Translation info and list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [translation, books]
+                properties:
+                  translation:
+                    $ref: '#/components/schemas/Translation'
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TranslationBook'
+
+  /api/{translationId}/{bookId}/{chapter}.json:
+    get:
+      operationId: getChapter
+      summary: Get chapter content
+      parameters:
+        - $ref: '#/components/parameters/translationId'
+        - $ref: '#/components/parameters/bookId'
+        - $ref: '#/components/parameters/chapter'
+      responses:
+        '200':
+          description: Chapter content with navigation links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterResponse'
+
+components:
+  parameters:
+    translationId:
+      name: translationId
+      in: path
+      required: true
+      description: Translation identifier (e.g. BSB, KJV)
+      schema:
+        type: string
+    bookId:
+      name: bookId
+      in: path
+      required: true
+      description: USFM book identifier (e.g. GEN, JHN, REV)
+      schema:
+        type: string
+    chapter:
+      name: chapter
+      in: path
+      required: true
+      description: Chapter number
+      schema:
+        type: integer
+        minimum: 1
+
+  schemas:
+    Translation:
+      type: object
+      required:
+        - id
+        - name
+        - website
+        - licenseUrl
+        - englishName
+        - language
+        - textDirection
+        - sha256
+        - availableFormats
+        - listOfBooksApiLink
+        - numberOfBooks
+        - totalNumberOfChapters
+        - totalNumberOfVerses
+        - languageName
+        - languageEnglishName
+      properties:
+        id:
+          type: string
+          description: Unique translation identifier
+          examples: ['BSB']
+        name:
+          type: string
+          description: Full name of the translation
+          examples: ['Berean Standard Bible']
+        website:
+          type: string
+          format: uri
+          description: Website for the translation
+        licenseUrl:
+          type: string
+          format: uri
+          description: URL for the translation license
+        shortName:
+          type: string
+          description: Short name / abbreviation
+          examples: ['BSB']
+        englishName:
+          type: string
+          description: English name of the translation
+        language:
+          type: string
+          description: ISO 639 3-letter language code
+          examples: ['eng']
+        textDirection:
+          type: string
+          enum: [ltr, rtl]
+          description: Text writing direction
+        sha256:
+          type: string
+          description: SHA-256 hash of the translation content
+        availableFormats:
+          type: array
+          items:
+            type: string
+          description: Available download formats
+          examples: [['json']]
+        listOfBooksApiLink:
+          type: string
+          description: API path to the books list
+          examples: ['/api/BSB/books.json']
+        completeTranslationApiLink:
+          type: string
+          description: API path to the complete translation
+          examples: ['/api/BSB/complete.json']
+        numberOfBooks:
+          type: integer
+          description: Total number of books in the translation
+        totalNumberOfChapters:
+          type: integer
+          description: Total number of chapters across all books
+        totalNumberOfVerses:
+          type: integer
+          description: Total number of verses across all books
+        languageName:
+          type: string
+          description: Language name in the native language
+          examples: ['English']
+        languageEnglishName:
+          type: string
+          description: Language name in English
+          examples: ['English']
+
+    TranslationBook:
+      type: object
+      required:
+        - id
+        - translationId
+        - name
+        - commonName
+        - order
+        - numberOfChapters
+        - sha256
+        - firstChapterNumber
+        - firstChapterApiLink
+        - lastChapterNumber
+        - lastChapterApiLink
+        - totalNumberOfVerses
+      properties:
+        id:
+          type: string
+          description: USFM book identifier
+          examples: ['GEN']
+        translationId:
+          type: string
+          description: Parent translation identifier
+          examples: ['BSB']
+        name:
+          type: string
+          description: Book name as provided by the translation
+          examples: ['Genesis']
+        commonName:
+          type: string
+          description: Common English name for the book
+          examples: ['Genesis']
+        title:
+          type: ['string', 'null']
+          description: Descriptive title for the book, if provided
+          examples: ['Genesis']
+        order:
+          type: integer
+          description: Numerical order of the book in the translation
+          examples: [1]
+        numberOfChapters:
+          type: integer
+          description: Number of chapters in the book
+        sha256:
+          type: string
+          description: SHA-256 hash of the book content
+        firstChapterNumber:
+          type: integer
+          description: Number of the first chapter
+        firstChapterApiLink:
+          type: string
+          description: API path to the first chapter
+          examples: ['/api/BSB/GEN/1.json']
+        lastChapterNumber:
+          type: integer
+          description: Number of the last chapter
+        lastChapterApiLink:
+          type: string
+          description: API path to the last chapter
+          examples: ['/api/BSB/GEN/50.json']
+        totalNumberOfVerses:
+          type: integer
+          description: Total number of verses in the book
+
+    ChapterResponse:
+      type: object
+      required:
+        - translation
+        - book
+        - chapter
+        - thisChapterLink
+        - numberOfVerses
+      properties:
+        translation:
+          $ref: '#/components/schemas/Translation'
+        book:
+          $ref: '#/components/schemas/TranslationBook'
+        chapter:
+          $ref: '#/components/schemas/Chapter'
+        numberOfVerses:
+          type: integer
+          description: Number of verses in the chapter
+        thisChapterLink:
+          type: string
+          description: API path to this chapter
+          examples: ['/api/BSB/JHN/3.json']
+        thisChapterAudioLinks:
+          $ref: '#/components/schemas/AudioLinks'
+        nextChapterApiLink:
+          type: string
+          description: API path to the next chapter, if any
+        nextChapterAudioLinks:
+          $ref: '#/components/schemas/AudioLinks'
+        previousChapterApiLink:
+          type: string
+          description: API path to the previous chapter, if any
+        previousChapterAudioLinks:
+          $ref: '#/components/schemas/AudioLinks'
+
+    AudioLinks:
+      type: object
+      description: Map of reader name to audio file URL
+      additionalProperties:
+        type: string
+        format: uri
+
+    Chapter:
+      type: object
+      required: [number, content, footnotes]
+      properties:
+        number:
+          type: integer
+          description: Chapter number
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterContent'
+          description: Ordered array of headings, verses, and line breaks
+        footnotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterFootnote'
+          description: Footnotes referenced from verse content
+
+    ChapterContent:
+      description: >
+        Discriminated union of chapter content elements.
+        Use the `type` field to determine the variant.
+      oneOf:
+        - $ref: '#/components/schemas/ChapterVerse'
+        - $ref: '#/components/schemas/ChapterHeading'
+        - $ref: '#/components/schemas/ChapterLineBreak'
+        - $ref: '#/components/schemas/ChapterHebrewSubtitle'
+      discriminator:
+        propertyName: type
+        mapping:
+          verse: '#/components/schemas/ChapterVerse'
+          heading: '#/components/schemas/ChapterHeading'
+          line_break: '#/components/schemas/ChapterLineBreak'
+          hebrew_subtitle: '#/components/schemas/ChapterHebrewSubtitle'
+
+    ChapterVerse:
+      type: object
+      required: [type, number, content]
+      properties:
+        type:
+          type: string
+          const: verse
+        number:
+          type: integer
+          description: Verse number
+        content:
+          type: array
+          description: >
+            Verse content elements: plain text strings, formatted text,
+            footnote markers, inline headings, or inline line breaks.
+          items:
+            $ref: '#/components/schemas/VerseContentItem'
+
+    ChapterHeading:
+      type: object
+      required: [type, content]
+      properties:
+        type:
+          type: string
+          const: heading
+        content:
+          type: array
+          items:
+            type: string
+          description: Heading text segments; concatenate with a space
+
+    ChapterLineBreak:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          const: line_break
+
+    ChapterHebrewSubtitle:
+      type: object
+      required: [type, content]
+      properties:
+        type:
+          type: string
+          const: hebrew_subtitle
+        content:
+          type: array
+          description: Subtitle content — strings, formatted text, or footnote references
+          items:
+            oneOf:
+              - type: string
+              - $ref: '#/components/schemas/FormattedText'
+              - $ref: '#/components/schemas/VerseFootnoteReference'
+
+    VerseContentItem:
+      description: A single element within verse content
+      oneOf:
+        - type: string
+        - $ref: '#/components/schemas/FormattedText'
+        - $ref: '#/components/schemas/VerseFootnoteReference'
+        - $ref: '#/components/schemas/InlineHeading'
+        - $ref: '#/components/schemas/InlineLineBreak'
+
+    FormattedText:
+      type: object
+      required: [text]
+      description: Text with optional formatting metadata
+      properties:
+        text:
+          type: string
+          description: The formatted text content
+        poem:
+          type: integer
+          description: Poetry indent level (common in Psalms)
+        wordsOfJesus:
+          type: boolean
+          description: Whether this text represents the words of Jesus
+
+    VerseFootnoteReference:
+      type: object
+      required: [noteId]
+      description: Inline footnote marker; match noteId to ChapterFootnote
+      properties:
+        noteId:
+          type: integer
+          description: ID referencing a ChapterFootnote
+
+    InlineHeading:
+      type: object
+      required: [heading]
+      description: A heading embedded within a verse
+      properties:
+        heading:
+          type: string
+
+    InlineLineBreak:
+      type: object
+      required: [lineBreak]
+      description: A line break embedded within a verse
+      properties:
+        lineBreak:
+          type: boolean
+          const: true
+
+    ChapterFootnote:
+      type: object
+      required: [noteId, caller, text]
+      properties:
+        noteId:
+          type: integer
+          description: Unique footnote ID within the chapter
+        caller:
+          type: ['string', 'null']
+          description: >
+            Footnote caller character. "+" means auto-generate,
+            null means no caller, otherwise use the literal string.
+        text:
+          type: string
+          description: Footnote text content
+        reference:
+          type: object
+          description: Verse reference for the footnote
+          properties:
+            chapter:
+              type: integer
+            verse:
+              type: integer
