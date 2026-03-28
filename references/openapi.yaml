@@ -1,20 +1,16 @@
-openapi: 3.1.0
+openapi: '3.1.0'
 info:
   title: helloao.org Bible API
-  version: 1.11.0
-  description: >
-    Public, read-only JSON API serving Bible translations, books, and chapter
-    content from helloao.org. No authentication required.
+  version: '1.11.0'
+  description: Public, read-only JSON API serving Bible translations, books, and chapter content from helloao.org. No authentication required.
   license:
     name: Various (per translation)
-    url: https://helloao.org
-  x-api-source: https://bible.helloao.org
-  x-api-changelog: https://github.com/HelloAOLab/bible-api/blob/main/API-CHANGELOG.md
-
+    url: 'https://helloao.org'
+  x-api-source: 'https://bible.helloao.org'
+  x-api-changelog: 'https://github.com/HelloAOLab/bible-api/blob/main/API-CHANGELOG.md'
 servers:
-  - url: https://bible.helloao.org
+  - url: 'https://bible.helloao.org'
     description: Production
-
 paths:
   /api/available_translations.json:
     get:
@@ -33,8 +29,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Translation'
-
-  /api/{translationId}/books.json:
+  '/api/{translationId}/books.json':
     get:
       operationId: listBooks
       summary: List books for a translation
@@ -55,8 +50,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TranslationBook'
-
-  /api/{translationId}/{bookId}/{chapter}.json:
+  '/api/{translationId}/{bookId}/{chapter}.json':
     get:
       operationId: getChapter
       summary: Get chapter content
@@ -71,7 +65,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChapterResponse'
-
+  '/api/{translationId}/complete.json':
+    get:
+      operationId: getCompleteTranslation
+      summary: Get complete translation download
+      parameters:
+        - $ref: '#/components/parameters/translationId'
+      responses:
+        '200':
+          description: Complete translation with all books and chapters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationComplete'
   /api/available_commentaries.json:
     get:
       operationId: listCommentaries
@@ -89,8 +95,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Commentary'
-
-  /api/c/{commentaryId}/books.json:
+  '/api/c/{commentaryId}/books.json':
     get:
       operationId: listCommentaryBooks
       summary: List books for a commentary
@@ -111,8 +116,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/CommentaryBook'
-
-  /api/c/{commentaryId}/{bookId}/{chapter}.json:
+  '/api/c/{commentaryId}/{bookId}/{chapter}.json':
     get:
       operationId: getCommentaryChapter
       summary: Get commentary chapter content
@@ -127,7 +131,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommentaryBookChapter'
-
+  '/api/c/{commentaryId}/profiles.json':
+    get:
+      operationId: listCommentaryProfiles
+      summary: List profiles for a commentary
+      parameters:
+        - $ref: '#/components/parameters/commentaryId'
+      responses:
+        '200':
+          description: Commentary info and list of profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [commentary, profiles]
+                properties:
+                  commentary:
+                    $ref: '#/components/schemas/Commentary'
+                  profiles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommentaryProfileRef'
+  '/api/c/{commentaryId}/profiles/{profileId}.json':
+    get:
+      operationId: getCommentaryProfile
+      summary: Get commentary profile content
+      parameters:
+        - $ref: '#/components/parameters/commentaryId'
+        - $ref: '#/components/parameters/profileId'
+      responses:
+        '200':
+          description: Commentary profile content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentaryProfileContent'
   /api/available_datasets.json:
     get:
       operationId: listDatasets
@@ -145,8 +183,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Dataset'
-
-  /api/d/{datasetId}/books.json:
+  '/api/d/{datasetId}/books.json':
     get:
       operationId: listDatasetBooks
       summary: List books for a dataset
@@ -167,8 +204,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/DatasetBook'
-
-  /api/d/{datasetId}/{bookId}/{chapter}.json:
+  '/api/d/{datasetId}/{bookId}/{chapter}.json':
     get:
       operationId: getDatasetChapter
       summary: Get dataset chapter content (cross-references)
@@ -183,7 +219,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetBookChapter'
-
 components:
   parameters:
     translationId:
@@ -222,7 +257,13 @@ components:
       description: Dataset identifier
       schema:
         type: string
-
+    profileId:
+      name: profileId
+      in: path
+      required: true
+      description: Profile identifier
+      schema:
+        type: string
   schemas:
     Translation:
       type: object
@@ -234,213 +275,484 @@ components:
         - englishName
         - language
         - textDirection
-        - sha256
-        - availableFormats
         - listOfBooksApiLink
+        - availableFormats
         - numberOfBooks
         - totalNumberOfChapters
         - totalNumberOfVerses
-        - languageName
-        - languageEnglishName
       properties:
         id:
           type: string
-          description: Unique translation identifier
-          examples: ['BSB']
         name:
           type: string
-          description: Full name of the translation
-          examples: ['Berean Standard Bible']
         website:
           type: string
-          format: uri
-          description: Website for the translation
+          description: 'The english name of the translation. / englishName: string; /** The website for the translation.'
         licenseUrl:
           type: string
-          format: uri
-          description: URL for the translation license
+          description: 'The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found.'
+        licenseNotes:
+          type: [string, 'null']
+        licenseNotice:
+          type: [string, 'null']
+          description: 'The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found. / licenseUrl: string; /** The notice that should be displayed when displaying content from the translation.'
         shortName:
           type: string
-          description: Short name / abbreviation
-          examples: ['BSB']
         englishName:
           type: string
-          description: English name of the translation
+          description: The english name of the translation.
         language:
           type: string
-          description: ISO 639 3-letter language code
-          examples: ['eng']
+          description: 'The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found. / licenseUrl: string; /** The notice that should be displayed when displaying content from the translation. / licenseNotice?: string | null; /** The ISO 639 letter language tag that the translation is primarily in.'
         textDirection:
           type: string
           enum: [ltr, rtl]
-          description: Text writing direction
-        sha256:
+        listOfBooksApiLink:
           type: string
-          description: SHA-256 hash of the translation content
         availableFormats:
           type: array
           items:
             type: string
-          description: Available download formats
-          examples: [['json']]
-        listOfBooksApiLink:
-          type: string
-          description: API path to the books list
-          examples: ['/api/BSB/books.json']
-        completeTranslationApiLink:
-          type: string
-          description: API path to the complete translation
-          examples: ['/api/BSB/complete.json']
+            enum: [json, usfm]
         numberOfBooks:
           type: integer
-          description: Total number of books in the translation
         totalNumberOfChapters:
           type: integer
-          description: Total number of chapters across all books
         totalNumberOfVerses:
           type: integer
-          description: Total number of verses across all books
+        numberOfApocryphalBooks:
+          type: integer
+        totalNumberOfApocryphalChapters:
+          type: integer
+        totalNumberOfApocryphalVerses:
+          type: integer
         languageName:
           type: string
-          description: Language name in the native language
-          examples: ['English']
         languageEnglishName:
           type: string
-          description: Language name in English
-          examples: ['English']
-
+        completeTranslationApiLink:
+          type: string
     TranslationBook:
       type: object
       required:
         - id
-        - translationId
         - name
         - commonName
+        - title
         - order
-        - numberOfChapters
-        - sha256
         - firstChapterNumber
         - firstChapterApiLink
         - lastChapterNumber
         - lastChapterApiLink
+        - numberOfChapters
         - totalNumberOfVerses
       properties:
         id:
           type: string
-          description: USFM book identifier
-          examples: ['GEN']
-        translationId:
-          type: string
-          description: Parent translation identifier
-          examples: ['BSB']
         name:
           type: string
-          description: Book name as provided by the translation
-          examples: ['Genesis']
         commonName:
           type: string
-          description: Common English name for the book
-          examples: ['Genesis']
         title:
-          type: ['string', 'null']
-          description: Descriptive title for the book, if provided
-          examples: ['Genesis']
+          type: [string, 'null']
         order:
           type: integer
-          description: Numerical order of the book in the translation
-          examples: [1]
-        numberOfChapters:
-          type: integer
-          description: Number of chapters in the book
-        sha256:
-          type: string
-          description: SHA-256 hash of the book content
+        isApocryphal:
+          type: boolean
         firstChapterNumber:
           type: integer
-          description: Number of the first chapter
         firstChapterApiLink:
           type: string
-          description: API path to the first chapter
-          examples: ['/api/BSB/GEN/1.json']
         lastChapterNumber:
           type: integer
-          description: Number of the last chapter
         lastChapterApiLink:
           type: string
-          description: API path to the last chapter
-          examples: ['/api/BSB/GEN/50.json']
+        numberOfChapters:
+          type: integer
         totalNumberOfVerses:
           type: integer
-          description: Total number of verses in the book
-
     ChapterResponse:
       type: object
       required:
+        - chapter
+        - thisChapterAudioLinks
         - translation
         - book
-        - chapter
         - thisChapterLink
+        - nextChapterApiLink
+        - nextChapterAudioLinks
+        - previousChapterApiLink
+        - previousChapterAudioLinks
         - numberOfVerses
       properties:
+        chapter:
+          $ref: '#/components/schemas/Chapter'
+        thisChapterAudioLinks:
+          $ref: '#/components/schemas/AudioLinks'
         translation:
           $ref: '#/components/schemas/Translation'
         book:
           $ref: '#/components/schemas/TranslationBook'
-        chapter:
-          $ref: '#/components/schemas/Chapter'
-        numberOfVerses:
-          type: integer
-          description: Number of verses in the chapter
         thisChapterLink:
           type: string
-          description: API path to this chapter
-          examples: ['/api/BSB/JHN/3.json']
-        thisChapterAudioLinks:
-          $ref: '#/components/schemas/AudioLinks'
         nextChapterApiLink:
-          type: string
-          description: API path to the next chapter, if any
+          type: [string, 'null']
         nextChapterAudioLinks:
-          $ref: '#/components/schemas/AudioLinks'
+          oneOf:
+            - $ref: '#/components/schemas/AudioLinks'
+            - type: 'null'
         previousChapterApiLink:
-          type: string
-          description: API path to the previous chapter, if any
+          type: [string, 'null']
         previousChapterAudioLinks:
-          $ref: '#/components/schemas/AudioLinks'
-
-    AudioLinks:
+          oneOf:
+            - $ref: '#/components/schemas/AudioLinks'
+            - type: 'null'
+        numberOfVerses:
+          type: integer
+    TranslationComplete:
       type: object
-      description: Map of reader name to audio file URL
-      additionalProperties:
-        type: string
-        format: uri
-
+      required: [translation, books]
+      properties:
+        translation:
+          $ref: '#/components/schemas/Translation'
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranslationCompleteBook'
+    TranslationCompleteBook:
+      type: object
+      required:
+        - id
+        - name
+        - commonName
+        - title
+        - order
+        - numberOfChapters
+        - totalNumberOfVerses
+        - chapters
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        commonName:
+          type: string
+        title:
+          type: [string, 'null']
+        order:
+          type: integer
+        numberOfChapters:
+          type: integer
+        totalNumberOfVerses:
+          type: integer
+        isApocryphal:
+          type: boolean
+        chapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranslationBookChapter'
+    Commentary:
+      type: object
+      required:
+        - id
+        - name
+        - website
+        - licenseUrl
+        - englishName
+        - language
+        - textDirection
+        - listOfBooksApiLink
+        - listOfProfilesApiLink
+        - availableFormats
+        - numberOfBooks
+        - totalNumberOfChapters
+        - totalNumberOfVerses
+        - totalNumberOfProfiles
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        website:
+          type: string
+        licenseUrl:
+          type: string
+        licenseNotes:
+          type: [string, 'null']
+        englishName:
+          type: string
+        language:
+          type: string
+          description: The ISO 639 letter language tag that the translation is primarily in.
+        textDirection:
+          type: string
+          enum: [ltr, rtl]
+        listOfBooksApiLink:
+          type: string
+        listOfProfilesApiLink:
+          type: string
+        availableFormats:
+          type: array
+          items:
+            type: string
+            enum: [json, usfm]
+        numberOfBooks:
+          type: integer
+        totalNumberOfChapters:
+          type: integer
+        totalNumberOfVerses:
+          type: integer
+        totalNumberOfProfiles:
+          type: integer
+        languageName:
+          type: string
+        languageEnglishName:
+          type: string
+    CommentaryBook:
+      type: object
+      required:
+        - id
+        - name
+        - commonName
+        - order
+        - firstChapterNumber
+        - firstChapterApiLink
+        - lastChapterNumber
+        - lastChapterApiLink
+        - numberOfChapters
+        - totalNumberOfVerses
+      properties:
+        id:
+          type: string
+          description: 'Defines an interface that contains information about a translation. / export interface Translation { /** The ID of the translation.'
+        name:
+          type: string
+        commonName:
+          type: string
+        introduction:
+          type: string
+        introductionSummary:
+          type: string
+        order:
+          type: integer
+        firstChapterNumber:
+          type: [integer, 'null']
+        firstChapterApiLink:
+          type: [string, 'null']
+        lastChapterNumber:
+          type: [integer, 'null']
+        lastChapterApiLink:
+          type: [string, 'null']
+        numberOfChapters:
+          type: integer
+        totalNumberOfVerses:
+          type: integer
+          description: 'The total number of chapters that are contained in this dataset. / totalNumberOfChapters: number; /** The total number of verses that are contained in this dataset.'
+    CommentaryBookChapter:
+      type: object
+      required:
+        - chapter
+        - commentary
+        - book
+        - thisChapterLink
+        - nextChapterApiLink
+        - previousChapterApiLink
+        - numberOfVerses
+      properties:
+        chapter:
+          $ref: '#/components/schemas/CommentaryChapter'
+        commentary:
+          $ref: '#/components/schemas/Commentary'
+        book:
+          $ref: '#/components/schemas/CommentaryBook'
+        thisChapterLink:
+          type: string
+        nextChapterApiLink:
+          type: [string, 'null']
+        previousChapterApiLink:
+          type: [string, 'null']
+        numberOfVerses:
+          type: integer
+    CommentaryProfileRef:
+      type: object
+      required: [id, subject, thisProfileLink]
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        reference:
+          oneOf:
+            - type: object
+              properties:
+                book:
+                  type: string
+                chapter:
+                  type: integer
+                verse:
+                  type: integer
+            - type: 'null'
+        thisProfileLink:
+          type: string
+        referenceChapterLink:
+          type: [string, 'null']
+    CommentaryProfileContent:
+      type: object
+      required: [commentary, profile, content]
+      properties:
+        commentary:
+          $ref: '#/components/schemas/Commentary'
+        profile:
+          $ref: '#/components/schemas/CommentaryProfileRef'
+        content:
+          type: array
+          items:
+            type: string
+    Dataset:
+      type: object
+      required:
+        - id
+        - name
+        - website
+        - licenseUrl
+        - englishName
+        - language
+        - textDirection
+        - listOfBooksApiLink
+        - availableFormats
+        - numberOfBooks
+        - totalNumberOfChapters
+        - totalNumberOfVerses
+        - totalNumberOfReferences
+      properties:
+        id:
+          type: string
+          description: 'The metadata for a translation that is input into the generator. / export interface InputTranslationMetadata extends MetadataBase { /** The ID of the translation.'
+        name:
+          type: string
+        website:
+          type: string
+        licenseUrl:
+          type: string
+        licenseNotes:
+          type: [string, 'null']
+        englishName:
+          type: string
+        language:
+          type: string
+        textDirection:
+          type: string
+          enum: [ltr, rtl]
+        listOfBooksApiLink:
+          type: string
+        availableFormats:
+          type: array
+          items:
+            type: string
+            enum: [json]
+        numberOfBooks:
+          type: integer
+        totalNumberOfChapters:
+          type: integer
+        totalNumberOfVerses:
+          type: integer
+        totalNumberOfReferences:
+          type: integer
+        languageName:
+          type: string
+        languageEnglishName:
+          type: string
+    DatasetBook:
+      type: object
+      required:
+        - id
+        - order
+        - firstChapterNumber
+        - firstChapterApiLink
+        - lastChapterNumber
+        - lastChapterApiLink
+        - numberOfChapters
+        - totalNumberOfVerses
+        - totalNumberOfReferences
+      properties:
+        id:
+          type: string
+        order:
+          type: integer
+        firstChapterNumber:
+          type: integer
+        firstChapterApiLink:
+          type: string
+        lastChapterNumber:
+          type: integer
+        lastChapterApiLink:
+          type: string
+        numberOfChapters:
+          type: integer
+        totalNumberOfVerses:
+          type: integer
+        totalNumberOfReferences:
+          type: integer
+          description: The total number of references that are contained in this dataset.
+    DatasetBookChapter:
+      type: object
+      required:
+        - chapter
+        - dataset
+        - book
+        - thisChapterLink
+        - nextChapterApiLink
+        - previousChapterApiLink
+        - numberOfVerses
+        - numberOfReferences
+      properties:
+        chapter:
+          $ref: '#/components/schemas/DatasetChapterData'
+        dataset:
+          $ref: '#/components/schemas/Dataset'
+        book:
+          $ref: '#/components/schemas/DatasetBook'
+        thisChapterLink:
+          type: string
+        nextChapterApiLink:
+          type: [string, 'null']
+        previousChapterApiLink:
+          type: [string, 'null']
+        numberOfVerses:
+          type: integer
+        numberOfReferences:
+          type: integer
     Chapter:
       type: object
       required: [number, content, footnotes]
       properties:
         number:
           type: integer
-          description: Chapter number
         content:
           type: array
           items:
             $ref: '#/components/schemas/ChapterContent'
-          description: Ordered array of headings, verses, and line breaks
         footnotes:
           type: array
           items:
             $ref: '#/components/schemas/ChapterFootnote'
-          description: Footnotes referenced from verse content
-
+    CommentaryChapter:
+      type: object
+      required: [number, content]
+      properties:
+        number:
+          type: integer
+        introduction:
+          type: string
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterVerse'
     ChapterContent:
-      description: >
-        Discriminated union of chapter content elements.
-        Use the `type` field to determine the variant.
       oneOf:
-        - $ref: '#/components/schemas/ChapterVerse'
         - $ref: '#/components/schemas/ChapterHeading'
         - $ref: '#/components/schemas/ChapterLineBreak'
+        - $ref: '#/components/schemas/ChapterVerse'
         - $ref: '#/components/schemas/ChapterHebrewSubtitle'
       discriminator:
         propertyName: type
@@ -449,62 +761,164 @@ components:
           heading: '#/components/schemas/ChapterHeading'
           line_break: '#/components/schemas/ChapterLineBreak'
           hebrew_subtitle: '#/components/schemas/ChapterHebrewSubtitle'
-
-    ChapterVerse:
-      type: object
-      required: [type, number, content]
-      properties:
-        type:
-          type: string
-          const: verse
-        number:
-          type: integer
-          description: Verse number
-        content:
-          type: array
-          description: >
-            Verse content elements: plain text strings, formatted text,
-            footnote markers, inline headings, or inline line breaks.
-          items:
-            $ref: '#/components/schemas/VerseContentItem'
-
     ChapterHeading:
       type: object
       required: [type, content]
       properties:
         type:
           type: string
-          const: heading
+          enum: [heading]
         content:
           type: array
           items:
             type: string
           description: Heading text segments; concatenate with a space
-
     ChapterLineBreak:
       type: object
       required: [type]
       properties:
         type:
           type: string
-          const: line_break
-
+          enum: [line_break]
+    ChapterVerse:
+      type: object
+      required: [type, number, content]
+      properties:
+        type:
+          type: string
+          enum: [verse]
+        number:
+          type: integer
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerseContentItem'
     ChapterHebrewSubtitle:
       type: object
       required: [type, content]
       properties:
         type:
           type: string
-          const: hebrew_subtitle
+          enum: [hebrew_subtitle]
         content:
           type: array
-          description: Subtitle content — strings, formatted text, or footnote references
           items:
             oneOf:
               - type: string
               - $ref: '#/components/schemas/FormattedText'
               - $ref: '#/components/schemas/VerseFootnoteReference'
-
+    FormattedText:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+        poem:
+          type: integer
+        wordsOfJesus:
+          type: boolean
+    InlineHeading:
+      type: object
+      required: [heading]
+      properties:
+        heading:
+          type: string
+    InlineLineBreak:
+      type: object
+      required: [lineBreak]
+      properties:
+        lineBreak:
+          type: boolean
+          const: true
+    VerseFootnoteReference:
+      type: object
+      required: [noteId]
+      properties:
+        noteId:
+          type: integer
+    ChapterFootnote:
+      type: object
+      required: [noteId, text, caller]
+      properties:
+        noteId:
+          type: integer
+        text:
+          type: string
+        reference:
+          type: object
+          properties:
+            chapter:
+              type: integer
+            verse:
+              type: integer
+          required: [chapter, verse]
+        caller:
+          oneOf:
+            - type: string
+              enum: [+]
+            - type: string
+    AudioLinks:
+      type: object
+      description: Map of reader name to audio file URL
+      additionalProperties:
+        type: string
+        format: uri
+    DatasetChapterData:
+      type: object
+      required: [number, content]
+      properties:
+        number:
+          type: integer
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetChapterVerseContent'
+    DatasetChapterVerseContent:
+      type: object
+      required: [verse, references]
+      properties:
+        verse:
+          type: integer
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/CrossReference'
+    CrossReference:
+      type: object
+      required: [book, chapter, verse, score]
+      properties:
+        book:
+          type: string
+          description: USFM book identifier
+        chapter:
+          type: integer
+          description: Chapter number
+        verse:
+          type: integer
+          description: Verse number
+        score:
+          type: number
+          description: Relevance score
+    CommentaryProfile:
+      type: object
+      required: [id, subject, reference]
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        reference:
+          oneOf:
+            - type: object
+              required: [book, chapter, verse]
+              properties:
+                book:
+                  type: string
+                chapter:
+                  type: integer
+                verse:
+                  type: integer
+            - type: 'null'
     VerseContentItem:
       description: A single element within verse content
       oneOf:
@@ -513,296 +927,3 @@ components:
         - $ref: '#/components/schemas/VerseFootnoteReference'
         - $ref: '#/components/schemas/InlineHeading'
         - $ref: '#/components/schemas/InlineLineBreak'
-
-    FormattedText:
-      type: object
-      required: [text]
-      description: Text with optional formatting metadata
-      properties:
-        text:
-          type: string
-          description: The formatted text content
-        poem:
-          type: integer
-          description: Poetry indent level (common in Psalms)
-        wordsOfJesus:
-          type: boolean
-          description: Whether this text represents the words of Jesus
-
-    VerseFootnoteReference:
-      type: object
-      required: [noteId]
-      description: Inline footnote marker; match noteId to ChapterFootnote
-      properties:
-        noteId:
-          type: integer
-          description: ID referencing a ChapterFootnote
-
-    InlineHeading:
-      type: object
-      required: [heading]
-      description: A heading embedded within a verse
-      properties:
-        heading:
-          type: string
-
-    InlineLineBreak:
-      type: object
-      required: [lineBreak]
-      description: A line break embedded within a verse
-      properties:
-        lineBreak:
-          type: boolean
-          const: true
-
-    ChapterFootnote:
-      type: object
-      required: [noteId, caller, text]
-      properties:
-        noteId:
-          type: integer
-          description: Unique footnote ID within the chapter
-        caller:
-          type: ['string', 'null']
-          description: >
-            Footnote caller character. "+" means auto-generate,
-            null means no caller, otherwise use the literal string.
-        text:
-          type: string
-          description: Footnote text content
-        reference:
-          type: object
-          description: Verse reference for the footnote
-          properties:
-            chapter:
-              type: integer
-            verse:
-              type: integer
-
-    Commentary:
-      type: object
-      required:
-        - id
-        - name
-        - englishName
-        - language
-        - listOfBooksApiLink
-        - numberOfBooks
-        - totalNumberOfChapters
-        - totalNumberOfVerses
-      properties:
-        id:
-          type: string
-          description: Unique commentary identifier
-          examples: ['cluv']
-        name:
-          type: string
-          description: Full name of the commentary
-        shortName:
-          type: string
-          description: Short name / abbreviation
-        englishName:
-          type: string
-          description: English name of the commentary
-        language:
-          type: string
-          description: ISO 639 3-letter language code
-          examples: ['eng']
-        listOfBooksApiLink:
-          type: string
-          description: API path to the commentary books list
-          examples: ['/api/c/cluv/books.json']
-        listOfProfilesApiLink:
-          type: string
-          description: API path to the profiles list
-        numberOfBooks:
-          type: integer
-          description: Total number of books in the commentary
-        totalNumberOfChapters:
-          type: integer
-          description: Total number of chapters across all books
-        totalNumberOfVerses:
-          type: integer
-          description: Total number of verses across all books
-
-    CommentaryBook:
-      type: object
-      required:
-        - id
-        - name
-        - commonName
-        - order
-        - numberOfChapters
-        - totalNumberOfVerses
-        - firstChapterApiLink
-      properties:
-        id:
-          type: string
-          description: USFM book identifier
-          examples: ['GEN']
-        name:
-          type: string
-          description: Book name as provided by the commentary
-          examples: ['Genesis']
-        commonName:
-          type: string
-          description: Common English name for the book
-          examples: ['Genesis']
-        order:
-          type: integer
-          description: Numerical order of the book
-          examples: [1]
-        numberOfChapters:
-          type: integer
-          description: Number of chapters in the book
-        totalNumberOfVerses:
-          type: integer
-          description: Total number of verses in the book
-        firstChapterApiLink:
-          type: string
-          description: API path to the first chapter
-          examples: ['/api/c/cluv/GEN/1.json']
-
-    CommentaryBookChapter:
-      type: object
-      required:
-        - commentary
-        - book
-        - chapter
-        - thisChapterLink
-        - numberOfVerses
-      properties:
-        commentary:
-          $ref: '#/components/schemas/Commentary'
-        book:
-          $ref: '#/components/schemas/CommentaryBook'
-        chapter:
-          $ref: '#/components/schemas/Chapter'
-        thisChapterLink:
-          type: string
-          description: API path to this chapter
-          examples: ['/api/c/cluv/GEN/1.json']
-        nextChapterApiLink:
-          type: string
-          description: API path to the next chapter, if any
-        previousChapterApiLink:
-          type: string
-          description: API path to the previous chapter, if any
-        numberOfVerses:
-          type: integer
-          description: Number of verses in the chapter
-
-    Dataset:
-      type: object
-      required:
-        - id
-        - name
-        - englishName
-        - language
-        - listOfBooksApiLink
-        - numberOfBooks
-        - totalNumberOfReferences
-      properties:
-        id:
-          type: string
-          description: Unique dataset identifier
-          examples: ['cross-references']
-        name:
-          type: string
-          description: Full name of the dataset
-        shortName:
-          type: string
-          description: Short name / abbreviation
-        englishName:
-          type: string
-          description: English name of the dataset
-        language:
-          type: string
-          description: ISO 639 3-letter language code
-          examples: ['eng']
-        listOfBooksApiLink:
-          type: string
-          description: API path to the dataset books list
-          examples: ['/api/d/cross-references/books.json']
-        numberOfBooks:
-          type: integer
-          description: Total number of books in the dataset
-        totalNumberOfReferences:
-          type: integer
-          description: Total number of cross-references in the dataset
-
-    DatasetBook:
-      type: object
-      required:
-        - id
-        - name
-        - numberOfChapters
-        - totalNumberOfReferences
-        - firstChapterApiLink
-      properties:
-        id:
-          type: string
-          description: USFM book identifier
-          examples: ['GEN']
-        name:
-          type: string
-          description: Book name
-          examples: ['Genesis']
-        numberOfChapters:
-          type: integer
-          description: Number of chapters in the book
-        totalNumberOfReferences:
-          type: integer
-          description: Total number of cross-references in the book
-        firstChapterApiLink:
-          type: string
-          description: API path to the first chapter
-          examples: ['/api/d/cross-references/GEN/1.json']
-
-    DatasetBookChapter:
-      type: object
-      required:
-        - dataset
-        - book
-        - chapter
-      properties:
-        dataset:
-          $ref: '#/components/schemas/Dataset'
-        book:
-          $ref: '#/components/schemas/DatasetBook'
-        chapter:
-          type: object
-          required: [number, content]
-          properties:
-            number:
-              type: integer
-              description: Chapter number
-            content:
-              type: array
-              description: Verse-level cross-references
-              items:
-                type: object
-                required: [verse, references]
-                properties:
-                  verse:
-                    type: integer
-                    description: Verse number
-                  references:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/CrossReference'
-
-    CrossReference:
-      type: object
-      required: [book, chapter, verse]
-      properties:
-        book:
-          type: string
-          description: USFM book identifier
-          examples: ['JHN']
-        chapter:
-          type: integer
-          description: Chapter number
-        verse:
-          type: integer
-          description: Verse number
