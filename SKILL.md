@@ -15,7 +15,7 @@ Use this skill when the user asks for a Bible verse, passage, chapter, or Script
 Run the lookup script:
 
 ```bash
-python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare]
+python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare] [--cross-refs] [--expand]
 ```
 
 ### Arguments
@@ -25,6 +25,8 @@ python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--st
 - **--translation ID**: Translation code (default: `BSB`). Common options: `KJV`, `ENGWEBP`.
 - **--study**: Include footnotes from the translation alongside verse text.
 - **--compare**: Show the passage in BSB, KJV, and ENGWEBP side by side.
+- **--cross-refs**: Show cross-references for the verse(s).
+- **--expand**: Used with `--cross-refs` to fetch and display the text of each referenced verse. Limited to the first 8 references to be respectful of the API.
 
 ### Reference format
 
@@ -40,6 +42,8 @@ The script prints:
 2. Verse numbers and text, with section headings in brackets
 3. If `--study`: footnotes listed at the end with reference and note text
 4. If `--compare`: the same block repeated for each translation
+5. If `--cross-refs`: a list of cross-references after the verse text
+6. If `--cross-refs --expand`: cross-references with their full verse text
 
 ### Error handling
 
