@@ -10,6 +10,20 @@ import urllib.error
 
 BASE_URL = "https://bible.helloao.org/api"
 
+# Commentary short names → API commentary IDs
+COMMENTARY_ALIASES = {
+    "gill": "john-gill",
+    "john-gill": "john-gill",
+    "henry": "matthew-henry",
+    "matthew-henry": "matthew-henry",
+    "clarke": "adam-clarke",
+    "adam-clarke": "adam-clarke",
+    "jfb": "jamieson-fausset-brown",
+    "kd": "keil-delitzsch",
+    "keil-delitzsch": "keil-delitzsch",
+    "tyndale": "tyndale",
+}
+
 # Common shorthand → actual API translation IDs
 TRANSLATION_ALIASES = {
     "KJV": "eng_kjv",
@@ -240,6 +254,35 @@ def format_citation(book_id, chapter, verse_start, verse_end, translation):
     return f"{cite} ({translation})"
 
 
+def fetch_commentary(commentary_id, book_id, chapter):
+    """Fetch commentary JSON from the API."""
+    url = f"{BASE_URL}/c/{commentary_id}/{book_id}/{chapter}.json"
+    try:
+        with urllib.request.urlopen(url) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"Error: API returned {e.code} for {url}", file=sys.stderr)
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"Error: Could not reach API — {e.reason}", file=sys.stderr)
+        sys.exit(1)
+
+
+def extract_commentary_for_verses(data, verse_start, verse_end):
+    """Extract commentary text keyed by verse number."""
+    content = data["chapter"]["content"]
+    result = {}
+    for item in content:
+        if item.get("type") == "verse":
+            num = item.get("number")
+            if verse_start is not None:
+                if num < verse_start or num > verse_end:
+                    continue
+            text, _ = extract_verse_text(item.get("content", []))
+            result[num] = text
+    return result
+
+
 def compare_mode(book_id, chapter, verse_start, verse_end):
     """Fetch and display the same reference from multiple translations."""
     translations = ["BSB", "KJV", "ENGWEBP"]
@@ -256,12 +299,39 @@ def main():
     parser.add_argument("--translation", default="BSB", help="Translation ID (default: BSB)")
     parser.add_argument("--study", action="store_true", help="Include footnotes")
     parser.add_argument("--compare", action="store_true", help="Show BSB, KJV, and ENGWEBP side by side")
+    parser.add_argument("--commentary", nargs="?", const="john-gill", default=None,
+                        help="Show commentary (default: john-gill). Options: gill, henry, clarke, jfb, kd, tyndale")
     args = parser.parse_args()
 
     book_id, chapter, verse_start, verse_end = parse_reference(args.reference)
 
     if args.compare:
         compare_mode(book_id, chapter, verse_start, verse_end)
+    elif args.commentary is not None:
+        commentary_key = args.commentary.lower()
+        commentary_id = COMMENTARY_ALIASES.get(commentary_key, commentary_key)
+        display_name = commentary_id.replace("-", " ").title()
+
+        data = fetch_chapter(args.translation, book_id, chapter)
+        commentary_data = fetch_commentary(commentary_id, book_id, chapter)
+        commentary_verses = extract_commentary_for_verses(commentary_data, verse_start, verse_end)
+
+        citation = format_citation(book_id, chapter, verse_start, verse_end, args.translation)
+        print(f"\n{citation}\n")
+
+        content = data["chapter"]["content"]
+        for item in content:
+            if item.get("type") == "verse":
+                num = item.get("number")
+                if verse_start is not None:
+                    if num < verse_start:
+                        continue
+                    if num > verse_end:
+                        break
+                text, _ = extract_verse_text(item.get("content", []))
+                print(f"  {num}  {text}")
+                if num in commentary_verses and commentary_verses[num]:
+                    print(f"\n  Commentary ({display_name}):\n  {commentary_verses[num]}\n")
     else:
         data = fetch_chapter(args.translation, book_id, chapter)
         citation = format_citation(book_id, chapter, verse_start, verse_end, args.translation)

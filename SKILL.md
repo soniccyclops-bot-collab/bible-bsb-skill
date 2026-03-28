@@ -15,7 +15,7 @@ Use this skill when the user asks for a Bible verse, passage, chapter, or Script
 Run the lookup script:
 
 ```bash
-python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare]
+python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare] [--commentary [NAME]]
 ```
 
 ### Arguments
@@ -25,6 +25,9 @@ python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--st
 - **--translation ID**: Translation code (default: `BSB`). Common options: `KJV`, `ENGWEBP`.
 - **--study**: Include footnotes from the translation alongside verse text.
 - **--compare**: Show the passage in BSB, KJV, and ENGWEBP side by side.
+- **--commentary [NAME]**: Show verse text interleaved with commentary. Default: `john-gill`.
+  Available commentaries: `gill` (John Gill), `henry` (Matthew Henry), `clarke` (Adam Clarke),
+  `jfb` (Jamieson-Fausset-Brown), `kd` (Keil & Delitzsch), `tyndale` (Tyndale).
 
 ### Reference format
 
@@ -40,6 +43,7 @@ The script prints:
 2. Verse numbers and text, with section headings in brackets
 3. If `--study`: footnotes listed at the end with reference and note text
 4. If `--compare`: the same block repeated for each translation
+5. If `--commentary`: each verse followed by its commentary text
 
 ### Error handling
 
