@@ -240,6 +240,85 @@ def format_citation(book_id, chapter, verse_start, verse_end, translation):
     return f"{cite} ({translation})"
 
 
+def fetch_cross_refs(book_id, chapter):
+    """Fetch cross-references for a chapter from the open-cross-ref API."""
+    url = f"https://bible.helloao.org/api/d/open-cross-ref/{book_id}/{chapter}.json"
+    try:
+        with urllib.request.urlopen(url) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"Warning: Cross-ref API returned {e.code} for {url}", file=sys.stderr)
+        return None
+    except urllib.error.URLError as e:
+        print(f"Warning: Could not reach cross-ref API — {e.reason}", file=sys.stderr)
+        return None
+
+
+def get_cross_refs_for_verses(book_id, chapter, verse_start, verse_end):
+    """Get cross-references filtered to the requested verse range."""
+    data = fetch_cross_refs(book_id, chapter)
+    if not data:
+        return []
+    content = data.get("chapter", {}).get("content", [])
+    refs = []
+    for item in content:
+        v = item.get("verse")
+        if verse_start is not None:
+            if v < verse_start or v > verse_end:
+                continue
+        for r in item.get("references", []):
+            refs.append(r)
+    return refs
+
+
+def format_cross_ref(ref):
+    """Format a single cross-reference as a human-readable string."""
+    book = BOOK_NAMES.get(ref["book"], ref["book"])
+    return f"{book} {ref['chapter']}:{ref['verse']}"
+
+
+def display_cross_refs(refs, expand=False, translation="BSB"):
+    """Display cross-references, optionally expanding with verse text."""
+    if not refs:
+        print("\n  No cross-references found.")
+        return
+
+    print("\n  Cross-references:")
+    if not expand:
+        for r in refs:
+            print(f"    - {format_cross_ref(r)}")
+        return
+
+    # Limit to first 8 references
+    limited = refs[:8]
+
+    # Group by book+chapter to minimize API calls
+    grouped = {}
+    for r in limited:
+        key = (r["book"], r["chapter"])
+        grouped.setdefault(key, []).append(r["verse"])
+
+    # Fetch each unique chapter once, serially
+    chapter_cache = {}
+    for (bid, ch) in grouped:
+        chapter_cache[(bid, ch)] = fetch_chapter(translation, bid, ch)
+
+    for r in limited:
+        key = (r["book"], r["chapter"])
+        label = format_cross_ref(r)
+        data = chapter_cache.get(key)
+        if not data:
+            print(f"    - {label}  [fetch error]")
+            continue
+        text = format_verses(data, r["verse"], r["verse"]).strip()
+        # Remove the verse number prefix for cleaner inline display
+        text = re.sub(r'^\d+\s*', '', text)
+        print(f"    - {label}  {text}")
+
+    if len(refs) > 8:
+        print(f"    ... and {len(refs) - 8} more")
+
+
 def compare_mode(book_id, chapter, verse_start, verse_end):
     """Fetch and display the same reference from multiple translations."""
     translations = ["BSB", "KJV", "ENGWEBP"]
@@ -256,6 +335,8 @@ def main():
     parser.add_argument("--translation", default="BSB", help="Translation ID (default: BSB)")
     parser.add_argument("--study", action="store_true", help="Include footnotes")
     parser.add_argument("--compare", action="store_true", help="Show BSB, KJV, and ENGWEBP side by side")
+    parser.add_argument("--cross-refs", action="store_true", help="Show cross-references for the verse(s)")
+    parser.add_argument("--expand", action="store_true", help="With --cross-refs, fetch and display referenced verse text")
     args = parser.parse_args()
 
     book_id, chapter, verse_start, verse_end = parse_reference(args.reference)
@@ -267,6 +348,10 @@ def main():
         citation = format_citation(book_id, chapter, verse_start, verse_end, args.translation)
         print(f"\n{citation}\n")
         print(format_verses(data, verse_start, verse_end, study=args.study))
+
+        if args.cross_refs:
+            refs = get_cross_refs_for_verses(book_id, chapter, verse_start, verse_end)
+            display_cross_refs(refs, expand=args.expand, translation=args.translation)
 
 
 if __name__ == "__main__":
