@@ -11,18 +11,45 @@ import urllib.error
 BASE_URL = "https://bible.helloao.org/api"
 
 # Commentary short names → API commentary IDs
+# Short aliases for convenience — dynamic lookup handles everything else
 COMMENTARY_ALIASES = {
     "gill": "john-gill",
-    "john-gill": "john-gill",
     "henry": "matthew-henry",
-    "matthew-henry": "matthew-henry",
     "clarke": "adam-clarke",
-    "adam-clarke": "adam-clarke",
     "jfb": "jamieson-fausset-brown",
     "kd": "keil-delitzsch",
-    "keil-delitzsch": "keil-delitzsch",
-    "tyndale": "tyndale",
 }
+
+
+def resolve_commentary(name):
+    """Resolve a commentary name to an API ID.
+    
+    Checks aliases first, then queries available_commentaries.json
+    for an exact or partial match on id/name/englishName.
+    """
+    key = name.lower().strip()
+    # Check aliases first
+    if key in COMMENTARY_ALIASES:
+        return COMMENTARY_ALIASES[key]
+    # Try as a direct API ID
+    try:
+        url = f"{BASE_URL}/available_commentaries.json"
+        with urllib.request.urlopen(url) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        for c in data.get("commentaries", []):
+            cid = c.get("id", "")
+            # Exact match on ID
+            if key == cid.lower():
+                return cid
+            # Partial match on name or englishName
+            cname = c.get("name", "").lower()
+            ename = c.get("englishName", "").lower()
+            if key in cid.lower() or key in cname or key in ename:
+                return cid
+    except Exception:
+        pass
+    # Fall back to using the name as-is (let the API error if invalid)
+    return name
 
 # Common shorthand → actual API translation IDs
 TRANSLATION_ALIASES = {
@@ -308,8 +335,7 @@ def main():
     if args.compare:
         compare_mode(book_id, chapter, verse_start, verse_end)
     elif args.commentary is not None:
-        commentary_key = args.commentary.lower()
-        commentary_id = COMMENTARY_ALIASES.get(commentary_key, commentary_key)
+        commentary_id = resolve_commentary(args.commentary)
         display_name = commentary_id.replace("-", " ").title()
 
         data = fetch_chapter(args.translation, book_id, chapter)
