@@ -15,7 +15,7 @@ Use this skill when the user asks for a Bible verse, passage, chapter, or Script
 Run the lookup script:
 
 ```bash
-python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare] [--cross-refs] [--expand]
+python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--study] [--compare] [--cross-refs] [--expand] [--commentary [NAME]]
 ```
 
 ### Arguments
@@ -27,6 +27,7 @@ python3 {skill_dir}/scripts/bible_lookup.py "Reference" [--translation ID] [--st
 - **--compare**: Show the passage in BSB, KJV, and ENGWEBP side by side.
 - **--cross-refs**: Show cross-references for the verse(s).
 - **--expand**: Used with `--cross-refs` to fetch and display the text of each referenced verse. Limited to the first 8 references to be respectful of the API.
+- **--commentary [NAME]**: Show commentary for the verse(s). Defaults to `john-gill` if no name given. Accepts partial name matches — the script dynamically queries the available commentaries API. Example: `--commentary gill`.
 
 ### Reference format
 
@@ -44,6 +45,7 @@ The script prints:
 4. If `--compare`: the same block repeated for each translation
 5. If `--cross-refs`: a list of cross-references after the verse text
 6. If `--cross-refs --expand`: cross-references with their full verse text
+7. If `--commentary`: verse text followed by commentary text for those verses
 
 ### Error handling
 

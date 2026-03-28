@@ -319,6 +319,72 @@ def display_cross_refs(refs, expand=False, translation="BSB"):
         print(f"    ... and {len(refs) - 8} more")
 
 
+def resolve_commentary(name):
+    """Dynamically resolve a commentary name/alias to its API ID."""
+    url = f"{BASE_URL}/available_commentaries.json"
+    try:
+        with urllib.request.urlopen(url) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            commentaries = data.get("commentaries", [])
+    except (urllib.error.HTTPError, urllib.error.URLError):
+        # API unavailable — use the name as-is
+        return name
+
+    # Exact match on id (case-insensitive)
+    name_lower = name.lower()
+    for c in commentaries:
+        if c.get("id", "").lower() == name_lower:
+            return c["id"]
+
+    # Partial match on id, name, or englishName
+    for c in commentaries:
+        for field in ("id", "name", "englishName"):
+            val = c.get(field, "")
+            if name_lower in val.lower():
+                return c["id"]
+
+    # No match — use as-is
+    return name
+
+
+def fetch_commentary(commentary_id, book_id, chapter):
+    """Fetch commentary JSON for a chapter from the API."""
+    url = f"{BASE_URL}/c/{commentary_id}/{book_id}/{chapter}.json"
+    try:
+        with urllib.request.urlopen(url) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"Error: Commentary API returned {e.code} for {url}", file=sys.stderr)
+        sys.exit(1)
+    except urllib.error.URLError as e:
+        print(f"Error: Could not reach commentary API — {e.reason}", file=sys.stderr)
+        sys.exit(1)
+
+
+def extract_commentary_text(data, verse_start, verse_end):
+    """Extract commentary text for specific verses from commentary response."""
+    content = data.get("chapter", {}).get("content", [])
+    lines = []
+    for item in content:
+        if item.get("type") != "verse":
+            continue
+        num = item.get("number")
+        if verse_start is not None:
+            if num < verse_start or num > verse_end:
+                continue
+        parts = []
+        for piece in item.get("content", []):
+            if isinstance(piece, str):
+                parts.append(piece)
+            elif isinstance(piece, dict) and "noteId" not in piece:
+                if "text" in piece:
+                    parts.append(piece["text"])
+        text = re.sub(r' {2,}', ' ', "".join(parts)).strip()
+        if text:
+            lines.append(f"  {num}  {text}")
+    return "\n".join(lines)
+
+
 def compare_mode(book_id, chapter, verse_start, verse_end):
     """Fetch and display the same reference from multiple translations."""
     translations = ["BSB", "KJV", "ENGWEBP"]
@@ -337,13 +403,24 @@ def main():
     parser.add_argument("--compare", action="store_true", help="Show BSB, KJV, and ENGWEBP side by side")
     parser.add_argument("--cross-refs", action="store_true", help="Show cross-references for the verse(s)")
     parser.add_argument("--expand", action="store_true", help="With --cross-refs, fetch and display referenced verse text")
+    parser.add_argument("--commentary", nargs="?", const="john-gill", default=None,
+                        help="Show commentary (default: john-gill). Accepts partial name match.")
     args = parser.parse_args()
 
     book_id, chapter, verse_start, verse_end = parse_reference(args.reference)
 
-    if args.compare:
-        compare_mode(book_id, chapter, verse_start, verse_end)
-    else:
+    if args.commentary is not None:
+        commentary_id = resolve_commentary(args.commentary)
+        # Fetch BSB verse text
+        data = fetch_chapter(args.translation, book_id, chapter)
+        citation = format_citation(book_id, chapter, verse_start, verse_end, args.translation)
+        print(f"\n{citation}\n")
+        print(format_verses(data, verse_start, verse_end))
+        # Fetch and display commentary
+        cdata = fetch_commentary(commentary_id, book_id, chapter)
+        print(f"\n  Commentary ({commentary_id}):\n")
+        print(extract_commentary_text(cdata, verse_start, verse_end))
+    elif args.compare:
         data = fetch_chapter(args.translation, book_id, chapter)
         citation = format_citation(book_id, chapter, verse_start, verse_end, args.translation)
         print(f"\n{citation}\n")
