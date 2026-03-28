@@ -72,6 +72,118 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterResponse'
 
+  /api/available_commentaries.json:
+    get:
+      operationId: listCommentaries
+      summary: List all available commentaries
+      responses:
+        '200':
+          description: List of commentaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [commentaries]
+                properties:
+                  commentaries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Commentary'
+
+  /api/c/{commentaryId}/books.json:
+    get:
+      operationId: listCommentaryBooks
+      summary: List books for a commentary
+      parameters:
+        - $ref: '#/components/parameters/commentaryId'
+      responses:
+        '200':
+          description: Commentary info and list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [commentary, books]
+                properties:
+                  commentary:
+                    $ref: '#/components/schemas/Commentary'
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommentaryBook'
+
+  /api/c/{commentaryId}/{bookId}/{chapter}.json:
+    get:
+      operationId: getCommentaryChapter
+      summary: Get commentary chapter content
+      parameters:
+        - $ref: '#/components/parameters/commentaryId'
+        - $ref: '#/components/parameters/bookId'
+        - $ref: '#/components/parameters/chapter'
+      responses:
+        '200':
+          description: Commentary chapter content with navigation links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentaryBookChapter'
+
+  /api/available_datasets.json:
+    get:
+      operationId: listDatasets
+      summary: List all available datasets
+      responses:
+        '200':
+          description: List of datasets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [datasets]
+                properties:
+                  datasets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dataset'
+
+  /api/d/{datasetId}/books.json:
+    get:
+      operationId: listDatasetBooks
+      summary: List books for a dataset
+      parameters:
+        - $ref: '#/components/parameters/datasetId'
+      responses:
+        '200':
+          description: Dataset info and list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [dataset, books]
+                properties:
+                  dataset:
+                    $ref: '#/components/schemas/Dataset'
+                  books:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DatasetBook'
+
+  /api/d/{datasetId}/{bookId}/{chapter}.json:
+    get:
+      operationId: getDatasetChapter
+      summary: Get dataset chapter content (cross-references)
+      parameters:
+        - $ref: '#/components/parameters/datasetId'
+        - $ref: '#/components/parameters/bookId'
+        - $ref: '#/components/parameters/chapter'
+      responses:
+        '200':
+          description: Dataset chapter content with cross-references
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetBookChapter'
+
 components:
   parameters:
     translationId:
@@ -96,6 +208,20 @@ components:
       schema:
         type: integer
         minimum: 1
+    commentaryId:
+      name: commentaryId
+      in: path
+      required: true
+      description: Commentary identifier
+      schema:
+        type: string
+    datasetId:
+      name: datasetId
+      in: path
+      required: true
+      description: Dataset identifier
+      schema:
+        type: string
 
   schemas:
     Translation:
@@ -452,3 +578,231 @@ components:
               type: integer
             verse:
               type: integer
+
+    Commentary:
+      type: object
+      required:
+        - id
+        - name
+        - englishName
+        - language
+        - listOfBooksApiLink
+        - numberOfBooks
+        - totalNumberOfChapters
+        - totalNumberOfVerses
+      properties:
+        id:
+          type: string
+          description: Unique commentary identifier
+          examples: ['cluv']
+        name:
+          type: string
+          description: Full name of the commentary
+        shortName:
+          type: string
+          description: Short name / abbreviation
+        englishName:
+          type: string
+          description: English name of the commentary
+        language:
+          type: string
+          description: ISO 639 3-letter language code
+          examples: ['eng']
+        listOfBooksApiLink:
+          type: string
+          description: API path to the commentary books list
+          examples: ['/api/c/cluv/books.json']
+        listOfProfilesApiLink:
+          type: string
+          description: API path to the profiles list
+        numberOfBooks:
+          type: integer
+          description: Total number of books in the commentary
+        totalNumberOfChapters:
+          type: integer
+          description: Total number of chapters across all books
+        totalNumberOfVerses:
+          type: integer
+          description: Total number of verses across all books
+
+    CommentaryBook:
+      type: object
+      required:
+        - id
+        - name
+        - commonName
+        - order
+        - numberOfChapters
+        - totalNumberOfVerses
+        - firstChapterApiLink
+      properties:
+        id:
+          type: string
+          description: USFM book identifier
+          examples: ['GEN']
+        name:
+          type: string
+          description: Book name as provided by the commentary
+          examples: ['Genesis']
+        commonName:
+          type: string
+          description: Common English name for the book
+          examples: ['Genesis']
+        order:
+          type: integer
+          description: Numerical order of the book
+          examples: [1]
+        numberOfChapters:
+          type: integer
+          description: Number of chapters in the book
+        totalNumberOfVerses:
+          type: integer
+          description: Total number of verses in the book
+        firstChapterApiLink:
+          type: string
+          description: API path to the first chapter
+          examples: ['/api/c/cluv/GEN/1.json']
+
+    CommentaryBookChapter:
+      type: object
+      required:
+        - commentary
+        - book
+        - chapter
+        - thisChapterLink
+        - numberOfVerses
+      properties:
+        commentary:
+          $ref: '#/components/schemas/Commentary'
+        book:
+          $ref: '#/components/schemas/CommentaryBook'
+        chapter:
+          $ref: '#/components/schemas/Chapter'
+        thisChapterLink:
+          type: string
+          description: API path to this chapter
+          examples: ['/api/c/cluv/GEN/1.json']
+        nextChapterApiLink:
+          type: string
+          description: API path to the next chapter, if any
+        previousChapterApiLink:
+          type: string
+          description: API path to the previous chapter, if any
+        numberOfVerses:
+          type: integer
+          description: Number of verses in the chapter
+
+    Dataset:
+      type: object
+      required:
+        - id
+        - name
+        - englishName
+        - language
+        - listOfBooksApiLink
+        - numberOfBooks
+        - totalNumberOfReferences
+      properties:
+        id:
+          type: string
+          description: Unique dataset identifier
+          examples: ['cross-references']
+        name:
+          type: string
+          description: Full name of the dataset
+        shortName:
+          type: string
+          description: Short name / abbreviation
+        englishName:
+          type: string
+          description: English name of the dataset
+        language:
+          type: string
+          description: ISO 639 3-letter language code
+          examples: ['eng']
+        listOfBooksApiLink:
+          type: string
+          description: API path to the dataset books list
+          examples: ['/api/d/cross-references/books.json']
+        numberOfBooks:
+          type: integer
+          description: Total number of books in the dataset
+        totalNumberOfReferences:
+          type: integer
+          description: Total number of cross-references in the dataset
+
+    DatasetBook:
+      type: object
+      required:
+        - id
+        - name
+        - numberOfChapters
+        - totalNumberOfReferences
+        - firstChapterApiLink
+      properties:
+        id:
+          type: string
+          description: USFM book identifier
+          examples: ['GEN']
+        name:
+          type: string
+          description: Book name
+          examples: ['Genesis']
+        numberOfChapters:
+          type: integer
+          description: Number of chapters in the book
+        totalNumberOfReferences:
+          type: integer
+          description: Total number of cross-references in the book
+        firstChapterApiLink:
+          type: string
+          description: API path to the first chapter
+          examples: ['/api/d/cross-references/GEN/1.json']
+
+    DatasetBookChapter:
+      type: object
+      required:
+        - dataset
+        - book
+        - chapter
+      properties:
+        dataset:
+          $ref: '#/components/schemas/Dataset'
+        book:
+          $ref: '#/components/schemas/DatasetBook'
+        chapter:
+          type: object
+          required: [number, content]
+          properties:
+            number:
+              type: integer
+              description: Chapter number
+            content:
+              type: array
+              description: Verse-level cross-references
+              items:
+                type: object
+                required: [verse, references]
+                properties:
+                  verse:
+                    type: integer
+                    description: Verse number
+                  references:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CrossReference'
+
+    CrossReference:
+      type: object
+      required: [book, chapter, verse]
+      properties:
+        book:
+          type: string
+          description: USFM book identifier
+          examples: ['JHN']
+        chapter:
+          type: integer
+          description: Chapter number
+        verse:
+          type: integer
+          description: Verse number
