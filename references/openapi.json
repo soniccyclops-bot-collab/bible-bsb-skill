@@ -1,0 +1,1577 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "helloao.org Bible API",
+    "version": "1.11.0",
+    "description": "Public, read-only JSON API serving Bible translations, books, and chapter content from helloao.org. No authentication required.",
+    "license": {
+      "name": "Various (per translation)",
+      "url": "https://helloao.org"
+    },
+    "x-api-source": "https://bible.helloao.org",
+    "x-api-changelog": "https://github.com/HelloAOLab/bible-api/blob/main/API-CHANGELOG.md"
+  },
+  "servers": [
+    {
+      "url": "https://bible.helloao.org",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/available_translations.json": {
+      "get": {
+        "operationId": "listTranslations",
+        "summary": "List all available translations",
+        "responses": {
+          "200": {
+            "description": "List of translations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "translations"
+                  ],
+                  "properties": {
+                    "translations": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Translation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{translationId}/books.json": {
+      "get": {
+        "operationId": "listBooks",
+        "summary": "List books for a translation",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/translationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Translation info and list of books",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "translation",
+                    "books"
+                  ],
+                  "properties": {
+                    "translation": {
+                      "$ref": "#/components/schemas/Translation"
+                    },
+                    "books": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TranslationBook"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{translationId}/{bookId}/{chapter}.json": {
+      "get": {
+        "operationId": "getChapter",
+        "summary": "Get chapter content",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/translationId"
+          },
+          {
+            "$ref": "#/components/parameters/bookId"
+          },
+          {
+            "$ref": "#/components/parameters/chapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chapter content with navigation links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/{translationId}/complete.json": {
+      "get": {
+        "operationId": "getCompleteTranslation",
+        "summary": "Get complete translation download",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/translationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete translation with all books and chapters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationComplete"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/available_commentaries.json": {
+      "get": {
+        "operationId": "listCommentaries",
+        "summary": "List all available commentaries",
+        "responses": {
+          "200": {
+            "description": "List of commentaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "commentaries"
+                  ],
+                  "properties": {
+                    "commentaries": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Commentary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/c/{commentaryId}/books.json": {
+      "get": {
+        "operationId": "listCommentaryBooks",
+        "summary": "List books for a commentary",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/commentaryId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commentary info and list of books",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "commentary",
+                    "books"
+                  ],
+                  "properties": {
+                    "commentary": {
+                      "$ref": "#/components/schemas/Commentary"
+                    },
+                    "books": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CommentaryBook"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/c/{commentaryId}/{bookId}/{chapter}.json": {
+      "get": {
+        "operationId": "getCommentaryChapter",
+        "summary": "Get commentary chapter content",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/commentaryId"
+          },
+          {
+            "$ref": "#/components/parameters/bookId"
+          },
+          {
+            "$ref": "#/components/parameters/chapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commentary chapter content with navigation links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentaryBookChapter"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/c/{commentaryId}/profiles.json": {
+      "get": {
+        "operationId": "listCommentaryProfiles",
+        "summary": "List profiles for a commentary",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/commentaryId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commentary info and list of profiles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "commentary",
+                    "profiles"
+                  ],
+                  "properties": {
+                    "commentary": {
+                      "$ref": "#/components/schemas/Commentary"
+                    },
+                    "profiles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CommentaryProfileRef"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/c/{commentaryId}/profiles/{profileId}.json": {
+      "get": {
+        "operationId": "getCommentaryProfile",
+        "summary": "Get commentary profile content",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/commentaryId"
+          },
+          {
+            "$ref": "#/components/parameters/profileId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commentary profile content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentaryProfileContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/available_datasets.json": {
+      "get": {
+        "operationId": "listDatasets",
+        "summary": "List all available datasets",
+        "responses": {
+          "200": {
+            "description": "List of datasets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "datasets"
+                  ],
+                  "properties": {
+                    "datasets": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Dataset"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/d/{datasetId}/books.json": {
+      "get": {
+        "operationId": "listDatasetBooks",
+        "summary": "List books for a dataset",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/datasetId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dataset info and list of books",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "dataset",
+                    "books"
+                  ],
+                  "properties": {
+                    "dataset": {
+                      "$ref": "#/components/schemas/Dataset"
+                    },
+                    "books": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DatasetBook"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/d/{datasetId}/{bookId}/{chapter}.json": {
+      "get": {
+        "operationId": "getDatasetChapter",
+        "summary": "Get dataset chapter content (cross-references)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/datasetId"
+          },
+          {
+            "$ref": "#/components/parameters/bookId"
+          },
+          {
+            "$ref": "#/components/parameters/chapter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dataset chapter content with cross-references",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetBookChapter"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "translationId": {
+        "name": "translationId",
+        "in": "path",
+        "required": true,
+        "description": "Translation identifier (e.g. BSB, KJV)",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "bookId": {
+        "name": "bookId",
+        "in": "path",
+        "required": true,
+        "description": "USFM book identifier (e.g. GEN, JHN, REV)",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "chapter": {
+        "name": "chapter",
+        "in": "path",
+        "required": true,
+        "description": "Chapter number",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "commentaryId": {
+        "name": "commentaryId",
+        "in": "path",
+        "required": true,
+        "description": "Commentary identifier",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "datasetId": {
+        "name": "datasetId",
+        "in": "path",
+        "required": true,
+        "description": "Dataset identifier",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "profileId": {
+        "name": "profileId",
+        "in": "path",
+        "required": true,
+        "description": "Profile identifier",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "Translation": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "website",
+          "licenseUrl",
+          "englishName",
+          "language",
+          "textDirection",
+          "listOfBooksApiLink",
+          "availableFormats",
+          "numberOfBooks",
+          "totalNumberOfChapters",
+          "totalNumberOfVerses"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string",
+            "description": "The english name of the translation. / englishName: string; /** The website for the translation."
+          },
+          "licenseUrl": {
+            "type": "string",
+            "description": "The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found."
+          },
+          "licenseNotes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "licenseNotice": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found. / licenseUrl: string; /** The notice that should be displayed when displaying content from the translation."
+          },
+          "shortName": {
+            "type": "string"
+          },
+          "englishName": {
+            "type": "string",
+            "description": "The english name of the translation."
+          },
+          "language": {
+            "type": "string",
+            "description": "The english name of the translation. / englishName: string; /** The website for the translation. / website: string; /** The URL that the license for the translation can be found. / licenseUrl: string; /** The notice that should be displayed when displaying content from the translation. / licenseNotice?: string | null; /** The ISO 639 letter language tag that the translation is primarily in."
+          },
+          "textDirection": {
+            "type": "string",
+            "enum": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          "listOfBooksApiLink": {
+            "type": "string"
+          },
+          "availableFormats": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "json",
+                "usfm"
+              ]
+            }
+          },
+          "numberOfBooks": {
+            "type": "integer"
+          },
+          "totalNumberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          },
+          "numberOfApocryphalBooks": {
+            "type": "integer"
+          },
+          "totalNumberOfApocryphalChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfApocryphalVerses": {
+            "type": "integer"
+          },
+          "languageName": {
+            "type": "string"
+          },
+          "languageEnglishName": {
+            "type": "string"
+          },
+          "completeTranslationApiLink": {
+            "type": "string"
+          }
+        }
+      },
+      "TranslationBook": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "commonName",
+          "title",
+          "order",
+          "firstChapterNumber",
+          "firstChapterApiLink",
+          "lastChapterNumber",
+          "lastChapterApiLink",
+          "numberOfChapters",
+          "totalNumberOfVerses"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "commonName": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order": {
+            "type": "integer"
+          },
+          "isApocryphal": {
+            "type": "boolean"
+          },
+          "firstChapterNumber": {
+            "type": "integer"
+          },
+          "firstChapterApiLink": {
+            "type": "string"
+          },
+          "lastChapterNumber": {
+            "type": "integer"
+          },
+          "lastChapterApiLink": {
+            "type": "string"
+          },
+          "numberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          }
+        }
+      },
+      "ChapterResponse": {
+        "type": "object",
+        "required": [
+          "chapter",
+          "thisChapterAudioLinks",
+          "translation",
+          "book",
+          "thisChapterLink",
+          "nextChapterApiLink",
+          "nextChapterAudioLinks",
+          "previousChapterApiLink",
+          "previousChapterAudioLinks",
+          "numberOfVerses"
+        ],
+        "properties": {
+          "chapter": {
+            "$ref": "#/components/schemas/Chapter"
+          },
+          "thisChapterAudioLinks": {
+            "$ref": "#/components/schemas/AudioLinks"
+          },
+          "translation": {
+            "$ref": "#/components/schemas/Translation"
+          },
+          "book": {
+            "$ref": "#/components/schemas/TranslationBook"
+          },
+          "thisChapterLink": {
+            "type": "string"
+          },
+          "nextChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextChapterAudioLinks": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AudioLinks"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "previousChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousChapterAudioLinks": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AudioLinks"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "numberOfVerses": {
+            "type": "integer"
+          }
+        }
+      },
+      "TranslationComplete": {
+        "type": "object",
+        "required": [
+          "translation",
+          "books"
+        ],
+        "properties": {
+          "translation": {
+            "$ref": "#/components/schemas/Translation"
+          },
+          "books": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TranslationCompleteBook"
+            }
+          }
+        }
+      },
+      "TranslationCompleteBook": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "commonName",
+          "title",
+          "order",
+          "numberOfChapters",
+          "totalNumberOfVerses",
+          "chapters"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "commonName": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order": {
+            "type": "integer"
+          },
+          "numberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          },
+          "isApocryphal": {
+            "type": "boolean"
+          },
+          "chapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TranslationBookChapter"
+            }
+          }
+        }
+      },
+      "Commentary": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "website",
+          "licenseUrl",
+          "englishName",
+          "language",
+          "textDirection",
+          "listOfBooksApiLink",
+          "listOfProfilesApiLink",
+          "availableFormats",
+          "numberOfBooks",
+          "totalNumberOfChapters",
+          "totalNumberOfVerses",
+          "totalNumberOfProfiles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "licenseUrl": {
+            "type": "string"
+          },
+          "licenseNotes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string",
+            "description": "The ISO 639 letter language tag that the translation is primarily in."
+          },
+          "textDirection": {
+            "type": "string",
+            "enum": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          "listOfBooksApiLink": {
+            "type": "string"
+          },
+          "listOfProfilesApiLink": {
+            "type": "string"
+          },
+          "availableFormats": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "json",
+                "usfm"
+              ]
+            }
+          },
+          "numberOfBooks": {
+            "type": "integer"
+          },
+          "totalNumberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          },
+          "totalNumberOfProfiles": {
+            "type": "integer"
+          },
+          "languageName": {
+            "type": "string"
+          },
+          "languageEnglishName": {
+            "type": "string"
+          }
+        }
+      },
+      "CommentaryBook": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "commonName",
+          "order",
+          "firstChapterNumber",
+          "firstChapterApiLink",
+          "lastChapterNumber",
+          "lastChapterApiLink",
+          "numberOfChapters",
+          "totalNumberOfVerses"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Defines an interface that contains information about a translation. / export interface Translation { /** The ID of the translation."
+          },
+          "name": {
+            "type": "string"
+          },
+          "commonName": {
+            "type": "string"
+          },
+          "introduction": {
+            "type": "string"
+          },
+          "introductionSummary": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "firstChapterNumber": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "firstChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastChapterNumber": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "lastChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "numberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer",
+            "description": "The total number of chapters that are contained in this dataset. / totalNumberOfChapters: number; /** The total number of verses that are contained in this dataset."
+          }
+        }
+      },
+      "CommentaryBookChapter": {
+        "type": "object",
+        "required": [
+          "chapter",
+          "commentary",
+          "book",
+          "thisChapterLink",
+          "nextChapterApiLink",
+          "previousChapterApiLink",
+          "numberOfVerses"
+        ],
+        "properties": {
+          "chapter": {
+            "$ref": "#/components/schemas/CommentaryChapter"
+          },
+          "commentary": {
+            "$ref": "#/components/schemas/Commentary"
+          },
+          "book": {
+            "$ref": "#/components/schemas/CommentaryBook"
+          },
+          "thisChapterLink": {
+            "type": "string"
+          },
+          "nextChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "numberOfVerses": {
+            "type": "integer"
+          }
+        }
+      },
+      "CommentaryProfileRef": {
+        "type": "object",
+        "required": [
+          "id",
+          "subject",
+          "thisProfileLink"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "reference": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "book": {
+                    "type": "string"
+                  },
+                  "chapter": {
+                    "type": "integer"
+                  },
+                  "verse": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thisProfileLink": {
+            "type": "string"
+          },
+          "referenceChapterLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "CommentaryProfileContent": {
+        "type": "object",
+        "required": [
+          "commentary",
+          "profile",
+          "content"
+        ],
+        "properties": {
+          "commentary": {
+            "$ref": "#/components/schemas/Commentary"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/CommentaryProfileRef"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Dataset": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "website",
+          "licenseUrl",
+          "englishName",
+          "language",
+          "textDirection",
+          "listOfBooksApiLink",
+          "availableFormats",
+          "numberOfBooks",
+          "totalNumberOfChapters",
+          "totalNumberOfVerses",
+          "totalNumberOfReferences"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The metadata for a translation that is input into the generator. / export interface InputTranslationMetadata extends MetadataBase { /** The ID of the translation."
+          },
+          "name": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "licenseUrl": {
+            "type": "string"
+          },
+          "licenseNotes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "textDirection": {
+            "type": "string",
+            "enum": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          "listOfBooksApiLink": {
+            "type": "string"
+          },
+          "availableFormats": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "json"
+              ]
+            }
+          },
+          "numberOfBooks": {
+            "type": "integer"
+          },
+          "totalNumberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          },
+          "totalNumberOfReferences": {
+            "type": "integer"
+          },
+          "languageName": {
+            "type": "string"
+          },
+          "languageEnglishName": {
+            "type": "string"
+          }
+        }
+      },
+      "DatasetBook": {
+        "type": "object",
+        "required": [
+          "id",
+          "order",
+          "firstChapterNumber",
+          "firstChapterApiLink",
+          "lastChapterNumber",
+          "lastChapterApiLink",
+          "numberOfChapters",
+          "totalNumberOfVerses",
+          "totalNumberOfReferences"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer"
+          },
+          "firstChapterNumber": {
+            "type": "integer"
+          },
+          "firstChapterApiLink": {
+            "type": "string"
+          },
+          "lastChapterNumber": {
+            "type": "integer"
+          },
+          "lastChapterApiLink": {
+            "type": "string"
+          },
+          "numberOfChapters": {
+            "type": "integer"
+          },
+          "totalNumberOfVerses": {
+            "type": "integer"
+          },
+          "totalNumberOfReferences": {
+            "type": "integer",
+            "description": "The total number of references that are contained in this dataset."
+          }
+        }
+      },
+      "DatasetBookChapter": {
+        "type": "object",
+        "required": [
+          "chapter",
+          "dataset",
+          "book",
+          "thisChapterLink",
+          "nextChapterApiLink",
+          "previousChapterApiLink",
+          "numberOfVerses",
+          "numberOfReferences"
+        ],
+        "properties": {
+          "chapter": {
+            "$ref": "#/components/schemas/DatasetChapterData"
+          },
+          "dataset": {
+            "$ref": "#/components/schemas/Dataset"
+          },
+          "book": {
+            "$ref": "#/components/schemas/DatasetBook"
+          },
+          "thisChapterLink": {
+            "type": "string"
+          },
+          "nextChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousChapterApiLink": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "numberOfVerses": {
+            "type": "integer"
+          },
+          "numberOfReferences": {
+            "type": "integer"
+          }
+        }
+      },
+      "Chapter": {
+        "type": "object",
+        "required": [
+          "number",
+          "content",
+          "footnotes"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterContent"
+            }
+          },
+          "footnotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterFootnote"
+            }
+          }
+        }
+      },
+      "CommentaryChapter": {
+        "type": "object",
+        "required": [
+          "number",
+          "content"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "introduction": {
+            "type": "string"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChapterVerse"
+            }
+          }
+        }
+      },
+      "ChapterContent": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChapterHeading"
+          },
+          {
+            "$ref": "#/components/schemas/ChapterLineBreak"
+          },
+          {
+            "$ref": "#/components/schemas/ChapterVerse"
+          },
+          {
+            "$ref": "#/components/schemas/ChapterHebrewSubtitle"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "verse": "#/components/schemas/ChapterVerse",
+            "heading": "#/components/schemas/ChapterHeading",
+            "line_break": "#/components/schemas/ChapterLineBreak",
+            "hebrew_subtitle": "#/components/schemas/ChapterHebrewSubtitle"
+          }
+        }
+      },
+      "ChapterHeading": {
+        "type": "object",
+        "required": [
+          "type",
+          "content"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "heading"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Heading text segments; concatenate with a space"
+          }
+        }
+      },
+      "ChapterLineBreak": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "line_break"
+            ]
+          }
+        }
+      },
+      "ChapterVerse": {
+        "type": "object",
+        "required": [
+          "type",
+          "number",
+          "content"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "verse"
+            ]
+          },
+          "number": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VerseContentItem"
+            }
+          }
+        }
+      },
+      "ChapterHebrewSubtitle": {
+        "type": "object",
+        "required": [
+          "type",
+          "content"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "hebrew_subtitle"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/components/schemas/FormattedText"
+                },
+                {
+                  "$ref": "#/components/schemas/VerseFootnoteReference"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "FormattedText": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "poem": {
+            "type": "integer"
+          },
+          "wordsOfJesus": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InlineHeading": {
+        "type": "object",
+        "required": [
+          "heading"
+        ],
+        "properties": {
+          "heading": {
+            "type": "string"
+          }
+        }
+      },
+      "InlineLineBreak": {
+        "type": "object",
+        "required": [
+          "lineBreak"
+        ],
+        "properties": {
+          "lineBreak": {
+            "type": "boolean",
+            "const": true
+          }
+        }
+      },
+      "VerseFootnoteReference": {
+        "type": "object",
+        "required": [
+          "noteId"
+        ],
+        "properties": {
+          "noteId": {
+            "type": "integer"
+          }
+        }
+      },
+      "ChapterFootnote": {
+        "type": "object",
+        "required": [
+          "noteId",
+          "text",
+          "caller"
+        ],
+        "properties": {
+          "noteId": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "object",
+            "properties": {
+              "chapter": {
+                "type": "integer"
+              },
+              "verse": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "chapter",
+              "verse"
+            ]
+          },
+          "caller": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "+"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      },
+      "AudioLinks": {
+        "type": "object",
+        "description": "Map of reader name to audio file URL",
+        "additionalProperties": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "DatasetChapterData": {
+        "type": "object",
+        "required": [
+          "number",
+          "content"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatasetChapterVerseContent"
+            }
+          }
+        }
+      },
+      "DatasetChapterVerseContent": {
+        "type": "object",
+        "required": [
+          "verse",
+          "references"
+        ],
+        "properties": {
+          "verse": {
+            "type": "integer"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CrossReference"
+            }
+          }
+        }
+      },
+      "CrossReference": {
+        "type": "object",
+        "required": [
+          "book",
+          "chapter",
+          "verse",
+          "score"
+        ],
+        "properties": {
+          "book": {
+            "type": "string",
+            "description": "USFM book identifier"
+          },
+          "chapter": {
+            "type": "integer",
+            "description": "Chapter number"
+          },
+          "verse": {
+            "type": "integer",
+            "description": "Verse number"
+          },
+          "score": {
+            "type": "number",
+            "description": "Relevance score"
+          }
+        }
+      },
+      "CommentaryProfile": {
+        "type": "object",
+        "required": [
+          "id",
+          "subject",
+          "reference"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "reference": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "book",
+                  "chapter",
+                  "verse"
+                ],
+                "properties": {
+                  "book": {
+                    "type": "string"
+                  },
+                  "chapter": {
+                    "type": "integer"
+                  },
+                  "verse": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "VerseContentItem": {
+        "description": "A single element within verse content",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/components/schemas/FormattedText"
+          },
+          {
+            "$ref": "#/components/schemas/VerseFootnoteReference"
+          },
+          {
+            "$ref": "#/components/schemas/InlineHeading"
+          },
+          {
+            "$ref": "#/components/schemas/InlineLineBreak"
+          }
+        ]
+      }
+    }
+  }
+}
